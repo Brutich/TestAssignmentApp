@@ -13,12 +13,12 @@
 // Пож-та, кроме кода, напишите ответ числом в теле письма.
 
 
-
 const int LENGTH_OF_TICKET_NUMBER = 13;
 const int NUMBER_SYSTEM = 13;
 
 // В общем случае счастливых билетов с суммой цифр, равной k в каждой «половинке», будет [N(k)^2].
 // Например для "половины" из 3 знаков десятеричной системы исчисления наименьшее возможное значение k равно 0 (для номера 000), а наибольшее — 27 (для номера 999)
+
 
 
 int halfLength = LENGTH_OF_TICKET_NUMBER / 2;
@@ -32,28 +32,29 @@ IEnumerable<int> numberSums = Enumerable.Range(0, biggestSum + 1)
     .Select(k => CountUniqueValuesFor(k, maxNumber.Length));
 
 
-int quantityOfEvenLuckyTickets = numberSums
-    .Select(sum => (int)Math.Pow(sum, 2))
-    .Sum();
+ulong quantityOfEvenLuckyTickets = 0;
+foreach (var sum in numberSums)
+    quantityOfEvenLuckyTickets += (ulong)Math.Pow(sum, 2);
 
 
 bool isOddNumber = LENGTH_OF_TICKET_NUMBER % 2 == 1;
-var quantityOfLuckyTickets = isOddNumber ? quantityOfEvenLuckyTickets *= NUMBER_SYSTEM : quantityOfEvenLuckyTickets;
+ulong quantityOfLuckyTickets = isOddNumber ? quantityOfEvenLuckyTickets *= NUMBER_SYSTEM : quantityOfEvenLuckyTickets;
 
 
 Console.WriteLine(quantityOfLuckyTickets);
 
 
 
-int CountUniqueValuesFor(int k, int digitCount)
+int CountUniqueValuesFor(int k, int digitsCount)
 {
-    if (digitCount <= 1)
+    if (digitsCount <= 1)
         return k < NUMBER_SYSTEM ? 1 : 0;
 
     return Enumerable.Range(0, NUMBER_SYSTEM)
-        .Select(l => (l > k) ? 0 : CountUniqueValuesFor(k - l, digitCount - 1))
+        .Select(l => (l > k) ? 0 : CountUniqueValuesFor(k - l, digitsCount - 1))
         .Sum();
 }
+
 
 
 class NumberSystem
