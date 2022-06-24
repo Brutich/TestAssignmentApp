@@ -13,27 +13,36 @@
 // Пож-та, кроме кода, напишите ответ числом в теле письма.
 
 
-const int LENGTH_OF_TICKET_NUMBER = 9;
+
+const int LENGTH_OF_TICKET_NUMBER = 7;
 const int NUMBER_SYSTEM = 13;
 
-NumberSystem numberSystem = new(NUMBER_SYSTEM);
-Console.WriteLine(numberSystem.ToInt(new[] { 1, 1, 0 }));
-
-
-// Например для "половины" из 3 знаков десятеричной системы исчисления наименьшее возможное значение k равно 0 (для номера 000), а наибольшее — 27 (для номера 999)
 // В общем случае счастливых билетов с суммой цифр, равной k в каждой «половинке», будет [N(k)^2].
-
+// Например для "половины" из 3 знаков десятеричной системы исчисления наименьшее возможное значение k равно 0 (для номера 000), а наибольшее — 27 (для номера 999)
 
 
 int halfLength = LENGTH_OF_TICKET_NUMBER / 2;
 
-int[] maxNumber = numberSystem.MaxNumber(halfLength);
+NumberSystem numberSystem = new(NUMBER_SYSTEM);
+int[] maxNumber = numberSystem.CalcMaxNumberFor(halfLength);
 int biggestSum = maxNumber.Sum();
 
-ulong quantityOfLuckyTickets = 0;
+int quantityOfLuckyTickets = 0;
+
 for (int k = 0; k <= biggestSum; k++)
 {
-    quantityOfLuckyTickets += (ulong)Math.Pow(CountUniqueValuesFor(k, maxNumber), 2);
+    int uniqueValues = CountUniqueValuesFor(k, maxNumber.Length);
+    quantityOfLuckyTickets += (int)Math.Pow(uniqueValues, 2);
+}
+
+int CountUniqueValuesFor(int k, int digitCount)
+{
+    if (digitCount <= 1)
+        return k < NUMBER_SYSTEM ? 1 : 0;
+
+    return Enumerable.Range(0, NUMBER_SYSTEM)
+        .Select(l => (l > k) ? 0 : CountUniqueValuesFor(k - l, digitCount - 1))
+        .Sum();
 }
 
 bool isOddNumber = LENGTH_OF_TICKET_NUMBER % 2 == 1;
@@ -45,48 +54,15 @@ if (isOddNumber)
 Console.WriteLine(quantityOfLuckyTickets);
 
 
-int CountUniqueValuesFor(int k, int[] maxNumber)
+
+
+class NumberSystem
 {
-    int result = 0;
-    for (int i = 0; i <= numberSystem.ToInt(maxNumber); i++)
-    {
-        if (numberSystem.SumDigitsOf(i) == k)
-            result++;
-    }
-
-    return result;
-}
-
-
-internal class NumberSystem
-{
-    private readonly int scale;
     private readonly int[] digits;
 
-    internal NumberSystem(int scale)
-    {
-        this.scale = scale;
-        digits = Enumerable.Range(0, scale).ToArray();
-    }
+    internal NumberSystem(int scale) 
+        => digits = Enumerable.Range(0, scale).ToArray();
 
-    internal int[] MaxNumber(int lengthOfDigits) 
+    internal int[] CalcMaxNumberFor(int lengthOfDigits) 
         => Enumerable.Repeat(digits.Length - 1, lengthOfDigits).ToArray();
-
-    internal int ToInt(int[] number)
-        => (int)number
-            .Reverse()
-            .Select((x, i) => x * Math.Pow(scale, i))
-            .Sum();
-
-    internal int SumDigitsOf(int n)
-    {
-        int sum = 0;
-        while (n != 0)
-        {
-            sum += n % scale;
-            n /= scale;
-        }
-
-        return sum;
-    }
 }
