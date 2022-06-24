@@ -13,57 +13,96 @@
 // Пож-та, кроме кода, напишите ответ числом в теле письма.
 
 
-const int LENGTH_OF_TICKET_NUMBER = 13;
-const int NUMBER_SYSTEM = 13;
+namespace TestAssignmentApp;
 
-// В общем случае счастливых билетов с суммой цифр, равной k в каждой «половинке», будет [N(k)^2].
-// Например для "половины" из 3 знаков десятеричной системы исчисления наименьшее возможное значение k равно 0 (для номера 000), а наибольшее — 27 (для номера 999)
-
-
-
-int halfLength = LENGTH_OF_TICKET_NUMBER / 2;
-
-NumberSystem numberSystem = new(NUMBER_SYSTEM);
-int[] maxNumber = numberSystem.CalcMaxNumberFor(halfLength);
-int biggestSum = maxNumber.Sum();
-
-
-IEnumerable<int> numberSums = Enumerable.Range(0, biggestSum + 1)
-    .Select(k => CountUniqueValuesFor(k, maxNumber.Length));
-
-
-ulong quantityOfEvenLuckyTickets = 0;
-foreach (var sum in numberSums)
-    quantityOfEvenLuckyTickets += (ulong)Math.Pow(sum, 2);
-
-
-bool isOddNumber = LENGTH_OF_TICKET_NUMBER % 2 == 1;
-ulong quantityOfLuckyTickets = isOddNumber ? quantityOfEvenLuckyTickets *= NUMBER_SYSTEM : quantityOfEvenLuckyTickets;
-
-
-Console.WriteLine(quantityOfLuckyTickets);
-
-
-
-int CountUniqueValuesFor(int k, int digitsCount)
+public class Program
 {
-    if (digitsCount <= 1)
-        return k < NUMBER_SYSTEM ? 1 : 0;
-
-    return Enumerable.Range(0, NUMBER_SYSTEM)
-        .Select(l => (l > k) ? 0 : CountUniqueValuesFor(k - l, digitsCount - 1))
-        .Sum();
-}
+    const int LENGTH_OF_TICKET_NUMBER = 13;
+    const int NUMBER_SYSTEM = 13;
 
 
+    public static void Main()
+    {
+        Console.WriteLine("Counting in progress...");
+        Console.WriteLine($"Amount of the beautiful ticket numbers: {CountLuckyNumbers()}");
+    }
 
-class NumberSystem
-{
-    private readonly int[] digits;
 
-    internal NumberSystem(int scale) 
-        => digits = Enumerable.Range(0, scale).ToArray();
+    /// <summary>
+    /// Optimized version of algorithm for counting lucky numbers.
+    /// </summary>
+    /// <returns>Quantity Of lucky tickets.</returns> 
+    public static ulong CountLuckyNumbers()
+    {
+        checked
+        {              
+            // First of all we need to take the half of ticket number length.
 
-    internal int[] CalcMaxNumberFor(int lengthOfDigits) 
-        => Enumerable.Repeat(digits.Length - 1, lengthOfDigits).ToArray();
+            int halfLength = LENGTH_OF_TICKET_NUMBER / 2;
+
+
+            // And then find the number of combinations for each sum of digits
+            // between 0 and max possible.
+
+            NumberSystem numberSystem = new(NUMBER_SYSTEM);
+            int[] maxNumber = numberSystem.CalcMaxNumberFor(halfLength);
+            int biggestSum = maxNumber.Sum();
+
+            IEnumerable<int> combinationAmounts = Enumerable.Range(0, biggestSum + 1)
+                .Select(possibleSum => CountCombinationsFor(possibleSum, maxNumber.Length));
+
+
+            // Total quantity for tickets with even count of digits in a number
+            // is count for half to the power of two.
+
+            ulong quantityOfEvenLuckyTickets = 0;
+            foreach (var amount in combinationAmounts)
+                quantityOfEvenLuckyTickets += (ulong)Math.Pow(amount, 2);
+
+
+            // For odd ones, the number of combinations increases by NUMBER SYSTEM times.
+
+            bool isOddNumber = LENGTH_OF_TICKET_NUMBER % 2 == 1;
+            ulong quantityOfLuckyTickets = isOddNumber ? quantityOfEvenLuckyTickets *= NUMBER_SYSTEM : quantityOfEvenLuckyTickets;
+
+
+            // Finaly.
+
+            return quantityOfLuckyTickets;
+        }
+    }
+
+
+    /// <summary>
+    /// The function looks for the number of combinations for specific sum of digits
+    /// Based on following recursive formula:
+    ///          d
+    /// Nn(k) =  ∑  Nn–1(k – l);
+    ///         l=0 
+    /// </summary>
+    public static int CountCombinationsFor(int sumOfDigits, int digitsCount)
+    {
+        if (digitsCount <= 1)
+            return sumOfDigits < NUMBER_SYSTEM ? 1 : 0;
+
+        return Enumerable.Range(0, NUMBER_SYSTEM)
+            .Select(digit => digit > sumOfDigits ? 0 : CountCombinationsFor(sumOfDigits - digit, digitsCount - 1))
+            .Sum();
+    }
+
+
+    /// <summary>
+    /// Provides conversion tools between decimal number system and custom one.
+    /// </summary>
+    private class NumberSystem
+    {
+        private readonly int[] digits;
+
+        internal NumberSystem(int scale)
+            => digits = Enumerable.Range(0, scale).ToArray();
+
+        internal int[] CalcMaxNumberFor(int lengthOfDigits)
+            => Enumerable.Repeat(digits.Length - 1, lengthOfDigits).ToArray();
+    }
+
 }
