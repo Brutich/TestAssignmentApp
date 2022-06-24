@@ -14,7 +14,7 @@
 
 
 
-const int LENGTH_OF_TICKET_NUMBER = 7;
+const int LENGTH_OF_TICKET_NUMBER = 13;
 const int NUMBER_SYSTEM = 13;
 
 // В общем случае счастливых билетов с суммой цифр, равной k в каждой «половинке», будет [N(k)^2].
@@ -27,13 +27,23 @@ NumberSystem numberSystem = new(NUMBER_SYSTEM);
 int[] maxNumber = numberSystem.CalcMaxNumberFor(halfLength);
 int biggestSum = maxNumber.Sum();
 
-int quantityOfLuckyTickets = 0;
 
-for (int k = 0; k <= biggestSum; k++)
-{
-    int uniqueValues = CountUniqueValuesFor(k, maxNumber.Length);
-    quantityOfLuckyTickets += (int)Math.Pow(uniqueValues, 2);
-}
+IEnumerable<int> numberSums = Enumerable.Range(0, biggestSum + 1)
+    .Select(k => CountUniqueValuesFor(k, maxNumber.Length));
+
+
+int quantityOfEvenLuckyTickets = numberSums
+    .Select(sum => (int)Math.Pow(sum, 2))
+    .Sum();
+
+
+bool isOddNumber = LENGTH_OF_TICKET_NUMBER % 2 == 1;
+var quantityOfLuckyTickets = isOddNumber ? quantityOfEvenLuckyTickets *= NUMBER_SYSTEM : quantityOfEvenLuckyTickets;
+
+
+Console.WriteLine(quantityOfLuckyTickets);
+
+
 
 int CountUniqueValuesFor(int k, int digitCount)
 {
@@ -44,16 +54,6 @@ int CountUniqueValuesFor(int k, int digitCount)
         .Select(l => (l > k) ? 0 : CountUniqueValuesFor(k - l, digitCount - 1))
         .Sum();
 }
-
-bool isOddNumber = LENGTH_OF_TICKET_NUMBER % 2 == 1;
-if (isOddNumber)
-{
-    quantityOfLuckyTickets *= NUMBER_SYSTEM;
-}
-
-Console.WriteLine(quantityOfLuckyTickets);
-
-
 
 
 class NumberSystem
